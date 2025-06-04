@@ -1,8 +1,10 @@
+import json
 import azure.functions as func
 import logging
 from utils.file_utils import allowed_file, save_upload_file
 from multipart import MultipartParser
 from io import BytesIO
+from services.form_recognizer import analyze_document
 
 uploadDocument_blueprint = func.Blueprint()
 
@@ -30,8 +32,17 @@ def upload_document(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse("Invalid file type. Only PDF and DOCX are supported.", status_code=400)
 
         saved_path = save_upload_file(file_part)  # Pass the multipart part directly
-
-        return func.HttpResponse(f"File uploaded successfully: {saved_path}", status_code=200)
+        # After file is saved
+        parsed_data = analyze_document(saved_path)
+        return func.HttpResponse(
+            json.dumps(
+                {
+                    "message": "Upload successful", 
+                    "extracted_text": parsed_data["text"]
+                 }),
+            status_code=200,
+            mimetype="application/json"
+        )
 
     except Exception as e:
         logging.error(f"Upload failed: {e}")
