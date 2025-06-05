@@ -19,8 +19,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.include_router(router, prefix="/api")
+@router.get("/")
+async def root():
+    return {"message": "Welcome to HeirAid API!"}
+app.include_router(router)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

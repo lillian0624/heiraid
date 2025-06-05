@@ -11,7 +11,7 @@ class QueryRequest(BaseModel):
 class DocumentRequest(BaseModel):
     document_url: str
 
-@router.post("/query")
+@router.post("/api/query")
 async def query_agent(request: QueryRequest):
     try:
         response = await handle_agent_request(request.query, request.language)
@@ -19,7 +19,7 @@ async def query_agent(request: QueryRequest):
     except Exception as e:
         return {"error": str(e)}
 
-@router.post("/analyze-document")
+@router.post("/api/analyze-document")
 async def analyze_doc(request: DocumentRequest):
     try:
         result = await analyze_document(request.document_url)
@@ -27,7 +27,7 @@ async def analyze_doc(request: DocumentRequest):
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/property-map")
+@router.get("/api/property-map")
 async def property_map():
     try:
         map_data = await get_property_map()
@@ -35,11 +35,11 @@ async def property_map():
     except Exception as e:
         return {"error": str(e)}
     
-@router.get("/health")
+@router.get("/api/health")
 async def health_check():
     return {"status": "ok", "message": "HeirAid API is running smoothly."}
 
-@router.get("/outreach-suggestions")
+@router.get("/api/outreach-suggestions")
 async def outreach_suggestions():
     try:
         # Placeholder for actual outreach suggestions logic
@@ -57,3 +57,8 @@ async def outreach_suggestions():
         return {"suggestions": suggestions}
     except Exception as e:
         return {"error": str(e)}
+
+@router.get("/")
+async def root():
+    return {"message": "Welcome to HeirAid API!"}
+

@@ -22,8 +22,20 @@ STORAGE_CONTAINER = os.getenv("AZURE_STORAGE_CONTAINER")
 
 client = ChatCompletionsClient(endpoint=AI_FOUNDRY_ENDPOINT, credential=AzureKeyCredential(AI_FOUNDRY_KEY))
 form_client = DocumentAnalysisClient(endpoint=FORM_RECOGNIZER_ENDPOINT, credential=AzureKeyCredential(FORM_RECOGNIZER_KEY))
-blob_service_client = BlobServiceClient.from_connection_string(STORAGE_CONNECTION_STRING)
-container_client = blob_service_client.get_container_client(STORAGE_CONTAINER)
+
+
+def get_blob_container_client():
+    conn_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    container_name = os.getenv("AZURE_STORAGE_CONTAINER")
+
+    if not conn_str:
+        raise ValueError("AZURE_STORAGE_CONNECTION_STRING is not set or is empty.")
+    if not container_name:
+        raise ValueError("AZURE_STORAGE_CONTAINER is not set or is empty.")
+
+    blob_service_client = BlobServiceClient.from_connection_string(conn_str)
+    return blob_service_client.get_container_client(container_name)
+
 
 async def handle_agent_request(query: str, language: str = "en") -> str:
     # Use correct instantiation for UserMessage
@@ -36,22 +48,22 @@ async def handle_agent_request(query: str, language: str = "en") -> str:
     return result
 
 async def upload_document(file_content: bytes, file_name: str) -> str:
+    container_client = get_blob_container_client()
     blob_client = container_client.get_blob_client(file_name)
     blob_client.upload_blob(file_content, overwrite=True)
     return blob_client.url
 
 async def analyze_document(file_content: bytes, file_name: str) -> dict:
-    # Upload to Blob Storage
+    container_client = get_blob_container_client()
     document_url = await upload_document(file_content, file_name)
-    # Analyze with Form Recognizer
     poller = form_client.begin_analyze_document("prebuilt-document", document_url)
     result = poller.result()
     fields = result.documents[0].fields if result.documents else {}
-     # Store extracted data in Blob Storage as JSON
     extracted_data = {k: v.value for k, v in fields.items()}
     blob_client = container_client.get_blob_client(f"{file_name}_extracted.json")
     blob_client.upload_blob(str(extracted_data), overwrite=True)
     return {"fields": extracted_data, "extracted_data_url": blob_client.url}
+
 
 async def get_property_map() -> dict:
     # Example: Fetch mock data from City of Atlanta Open Data Hub
