@@ -85,4 +85,4 @@ jobs:
           # Specify the package to deploy; it's now 'release.zip' in the current directory after unzipping
           package: 'release.zip'
           # Optional: Add a startup command if your app needs one (e.g., gunicorn)
-          # startup-command: 'gunicorn --bind 0.0.0.0 --worker-class gevent --workers 4 app:app'
+          startup-command: 'source /home/site/wwwroot/backend/venv/bin/activate && gunicorn --bind 0.0.0.0 --worker-class gevent --workers 4 backend.main:app'
