@@ -27,9 +27,11 @@ jobs:
       - name: Create and start virtual environment and Install dependencies
         # Assuming requirements.txt is inside the 'backend' directory
         run: |
+          # Change to the backend directory where your requirements.txt and app code reside
+          cd backend
           python -m venv venv
           source venv/bin/activate
-          pip install -r backend/requirements.txt # Adjusted path here
+          pip install -r requirements.txt 
 
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
@@ -37,11 +39,9 @@ jobs:
         # Zip only the necessary application files, excluding the venv, but including the backend folder contents
         # This will create release.zip at the root of the artifact
         run: |
-          zip -r release.zip backend/ # Zip the entire 'backend' folder
-          # Alternatively, if you want only the contents of backend directly in the zip:
-          # cd backend
-          # zip -r ../release.zip .
-          # cd ..
+          cd backend
+          zip -r ../release.zip .
+          cd ..
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
