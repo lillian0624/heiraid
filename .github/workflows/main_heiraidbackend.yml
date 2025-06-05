@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read # This is required for actions/checkout
+      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -24,30 +24,26 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Create and start virtual environment and Install dependencies
-        # Assuming requirements.txt is inside the 'backend' directory
+      - name: Create and start virtual environment
         run: |
           python -m venv venv
           source venv/bin/activate
-          pip install -r backend/requirements.txt # Adjusted path here
-
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        # Zip only the necessary application files, excluding the venv, but including the backend folder contents
-        # This will create release.zip at the root of the artifact
-        run: |
-          zip -r release.zip backend/ # Zip the entire 'backend' folder
-          # Alternatively, if you want only the contents of backend directly in the zip:
-          # cd backend
-          # zip -r ../release.zip .
-          # cd ..
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: release.zip # Ensure this matches the zip command output path
+          path: |
+            release.zip
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
@@ -56,8 +52,8 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: read # This is required for actions/checkout
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
 
     steps:
       - name: Download artifact from build job
@@ -66,15 +62,15 @@ jobs:
           name: python-app
 
       - name: Unzip artifact for deployment
-        # Unzip the artifact to the current directory where the deploy action expects it
         run: unzip release.zip
 
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_69D33CA1D395419ABA053BE5F01B7FD5 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_01B1C38A184744C4860F0AF51D871B49 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_256EF27FC90C419FB80957E14871D487 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_94C2F02A8E744118BF44C5B31977355A }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4757AB83639E46E39A9AAC6DDEE413FB }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_664E86BA21FF4CFBBC6EEE6624FDBA94 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -82,7 +78,4 @@ jobs:
         with:
           app-name: 'HeirAidBackend'
           slot-name: 'Production'
-          # Specify the package to deploy; it's now 'release.zip' in the current directory after unzipping
-          package: 'release.zip'
-          # Optional: Add a startup command if your app needs one (e.g., gunicorn)
-          # startup-command: 'gunicorn --bind 0.0.0.0 --worker-class gevent --workers 4 app:app'
+          
