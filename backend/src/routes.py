@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from agent import handle_agent_request, analyze_document, get_property_map
+from agent import get_outreach_suggestions, handle_agent_request, analyze_document, get_property_map
 
 router = APIRouter()
 
@@ -32,5 +32,28 @@ async def property_map():
     try:
         map_data = await get_property_map()
         return map_data
+    except Exception as e:
+        return {"error": str(e)}
+    
+@router.get("/health")
+async def health_check():
+    return {"status": "ok", "message": "HeirAid API is running smoothly."}
+
+@router.get("/outreach-suggestions")
+async def outreach_suggestions():
+    try:
+        # Placeholder for actual outreach suggestions logic
+        suggestions = await get_outreach_suggestions()
+        if not suggestions:
+            suggestions = ["No suggestions available at this time."]
+        elif isinstance(suggestions, str):
+            suggestions = [suggestions]
+        elif not isinstance(suggestions, list):
+            suggestions = ["Unexpected response format."]
+        elif len(suggestions) > 5:
+            suggestions = suggestions[:5]
+        elif len(suggestions) < 5:
+            suggestions += ["No additional suggestions available."] * (5 - len(suggestions))
+        return {"suggestions": suggestions}
     except Exception as e:
         return {"error": str(e)}
