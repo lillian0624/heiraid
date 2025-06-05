@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from agent import get_outreach_suggestions, handle_agent_request, analyze_document, get_property_map
+from .agent import get_outreach_suggestions, handle_agent_request, analyze_document, get_property_map
 
 router = APIRouter()
 
