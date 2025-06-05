@@ -1,6 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
+# GitHub Actions workflow to build and deploy a Python (FastAPI) app to Azure App Service
 
 name: Build and deploy Python app to Azure Web App - HeirAidBackend
 
@@ -14,40 +12,38 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read # This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python version
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Create and start virtual environment and Install dependencies
-        # Assuming requirements.txt is inside the 'backend' directory
+      - name: Install dependencies
         run: |
-          # Change to the backend directory where your requirements.txt and app code reside
           cd backend
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt 
+          pip install -r requirements.txt
 
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+      # Optional: Run tests
+      # - name: Run tests
+      #   run: |
+      #     cd backend
+      #     pytest
 
       - name: Zip artifact for deployment
-        # Zip only the necessary application files, excluding the venv, but including the backend folder contents
-        # This will create release.zip at the root of the artifact
         run: |
           cd backend
           zip -r ../release.zip .
           cd ..
 
-      - name: Upload artifact for deployment jobs
+      - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: release.zip # Ensure this matches the zip command output path
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -56,8 +52,8 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: read # This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -66,7 +62,6 @@ jobs:
           name: python-app
 
       - name: Unzip artifact for deployment
-        # Unzip the artifact to the current directory where the deploy action expects it
         run: unzip release.zip
 
       - name: Login to Azure
@@ -76,13 +71,11 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_01B1C38A184744C4860F0AF51D871B49 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_256EF27FC90C419FB80957E14871D487 }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'HeirAidBackend'
           slot-name: 'Production'
-          # Specify the package to deploy; it's now 'release.zip' in the current directory after unzipping
           package: 'release.zip'
-          # Optional: Add a startup command if your app needs one (e.g., gunicorn)
-          startup-command: 'source /home/site/wwwroot/backend/venv/bin/activate && uvicorn backend.main:app --host 0.0.0.0 --port $PORT'
+          startup-command: 'uvicorn backend.main:app --host 0.0.0.0 --port $PORT'
