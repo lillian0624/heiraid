@@ -1,0 +1,5 @@
+azure-identity
+azure-storage-blob
+azure-ai-formrecognizer
+azure-search-documents
+python-dotenv # For loading environment variables locally
