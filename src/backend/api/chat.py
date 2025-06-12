@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from ..services.cognitive_search_service import CognitiveSearchService
 from ..services.openai_service import OpenAIService
-from ..services.auth_service import get_current_user_context # For RBAC
+# from ..services.auth_service import get_current_user_context # For RBAC
 import os
 
 router = APIRouter()
@@ -25,7 +25,7 @@ class ChatRequest(BaseModel):
 @router.post("/")
 async def chat_with_ai(
     request_body: ChatRequest,
-    user_context: dict = Depends(get_current_user_context) # Get authenticated user context
+    # user_context: dict = Depends(get_current_user_context) # Get authenticated user context
 ):
     user_message = request_body.message
 
