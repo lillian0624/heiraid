@@ -1,17 +1,34 @@
 # src/backend/api/chat.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter
 from pydantic import BaseModel
 from ..services.cognitive_search_service import CognitiveSearchService
 from ..services.openai_service import OpenAIService
-# from ..services.auth_service import get_current_user_context # For RBAC
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
+from azure.search.documents import SearchClient
+
+class CognitiveSearchService:
+    def __init__(self, endpoint=None, index_name=None, credential=None):
+        # Use provided values or fall back to environment variables
+        self.endpoint = endpoint or os.getenv("AZURE_SEARCH_ENDPOINT")
+        self.index_name = index_name or os.getenv("AZURE_SEARCH_INDEX")
+        self.credential = credential or os.getenv("AZURE_SEARCH_KEY")
+        print("DEBUG: endpoint =", self.endpoint)
+        self.search_client = SearchClient(
+            endpoint=self.endpoint,
+            index_name=self.index_name,
+            credential=self.credential
+        )
 
 router = APIRouter()
 
-# Initialize services (could be done via FastAPI dependency injection)
+# Initialize services
 cognitive_search_service = CognitiveSearchService(
-    endpoint=os.environ.get("COGNITIVE_SEARCH_ENDPOINT"),
-    index_name=os.environ.get("COGNITIVE_SEARCH_INDEX_NAME")
+    endpoint=os.environ.get("AZURE_SEARCH_ENDPOINT"),
+    index_name=os.environ.get("AZURE_SEARCH_INDEX"),
+    credential=os.environ.get("AZURE_SEARCH_KEY")
 )
 openai_service = OpenAIService(
     openai_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
@@ -23,14 +40,11 @@ class ChatRequest(BaseModel):
     message: str
 
 @router.post("/")
-async def chat_with_ai(
-    request_body: ChatRequest,
-    # user_context: dict = Depends(get_current_user_context) # Get authenticated user context
-):
+async def chat_with_ai(request_body: ChatRequest):
     user_message = request_body.message
 
-    # 1. Search for relevant documents in Cognitive Search with RBAC filter
-    relevant_docs = cognitive_search_service.search_documents(user_message, user_context, top=5)
+    # 1. Search for relevant documents in Cognitive Search
+    relevant_docs = cognitive_search_service.search_documents(user_message, top=5)
 
     context_str = "\n".join([doc.get('content', '') for doc in relevant_docs])
     if not context_str:

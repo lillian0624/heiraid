@@ -1,15 +1,24 @@
 # src/backend/services/cognitive_search_service.py
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
 import logging
 from azure.search.documents import SearchClient
-from azure.identity import DefaultAzureCredential
 
 logger = logging.getLogger(__name__)
 
 class CognitiveSearchService:
-    def __init__(self, endpoint: str, index_name: str):
-        credential = DefaultAzureCredential() # Using DefaultAzureCredential for service-to-service auth
-        self.search_client = SearchClient(endpoint=endpoint, index_name=index_name, credential=credential)
+    def __init__(self, endpoint=None, index_name=None, credential=None):
+        self.endpoint = endpoint or os.getenv("AZURE_SEARCH_ENDPOINT")
+        self.index_name = index_name or os.getenv("AZURE_SEARCH_INDEX")
+        self.credential = credential or os.getenv("AZURE_SEARCH_KEY")
+        print("DEBUG: endpoint =", self.endpoint)
+        self.search_client = SearchClient(
+            endpoint=self.endpoint,
+            index_name=self.index_name,
+            credential=self.credential
+        )
         logger.info(f"Initialized Cognitive Search client for index: {index_name}")
 
     def build_rbac_filter(self, user_context: dict) -> str:

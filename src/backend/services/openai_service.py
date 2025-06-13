@@ -3,15 +3,18 @@ import os
 import logging
 from openai import OpenAI
 from typing import List, Dict
+from fastapi import HTTPException, status
 
 logger = logging.getLogger(__name__)
 
 class OpenAIService:
     def __init__(self, openai_endpoint: str, openai_api_key: str, deployment_name: str):
+        print("DEBUG: openai_endpoint =", openai_endpoint)
+        print("DEBUG: openai_api_key =", openai_api_key)
+        print("DEBUG: deployment_name =", deployment_name)
         self.client = OpenAI(
             api_key=openai_api_key,
-            base_url=f"{openai_endpoint}/openai/deployments/{deployment_name}/", # For Azure OpenAI
-            api_version="2024-02-15-preview" # Or your specific API version
+            base_url=openai_endpoint  # Just the endpoint, no /openai/deployments/...
         )
         self.deployment_name = deployment_name
         logger.info(f"Initialized Azure OpenAI client for deployment: {deployment_name}")
@@ -22,7 +25,7 @@ class OpenAIService:
         """
         try:
             response = self.client.chat.completions.create(
-                model=self.deployment_name, # Use deployment name for Azure OpenAI
+                model=self.deployment_name,  # Use deployment name for Azure OpenAI
                 messages=messages,
                 temperature=temperature,
                 max_tokens=max_tokens
@@ -39,7 +42,7 @@ class OpenAIService:
         """
         try:
             response = self.client.embeddings.create(
-                model="text-embedding-ada-002", # Your embedding model deployment name
+                model="text-embedding-ada-002",  # Your embedding model deployment name
                 input=text
             )
             return response.data[0].embedding

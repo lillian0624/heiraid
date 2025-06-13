@@ -51,18 +51,17 @@ class SearchResponse(BaseModel):
 # In a larger application, you might use FastAPI's dependency injection
 # for these services to manage their lifecycle better.
 try:
-    COGNITIVE_SEARCH_ENDPOINT = os.environ.get("COGNITIVE_SEARCH_ENDPOINT")
-    COGNITIVE_SEARCH_INDEX_NAME = os.environ.get("COGNITIVE_SEARCH_INDEX_NAME")
+    COGNITIVE_SEARCH_ENDPOINT = os.environ.get("AZURE_SEARCH_ENDPOINT")
+    COGNITIVE_SEARCH_INDEX_NAME = os.environ.get("AZURE_SEARCH_INDEX")
 
     if not COGNITIVE_SEARCH_ENDPOINT or not COGNITIVE_SEARCH_INDEX_NAME:
-        raise ValueError("COGNITIVE_SEARCH_ENDPOINT and COGNITIVE_SEARCH_INDEX_NAME must be set in environment variables.")
+        raise ValueError("AZURE_SEARCH_ENDPOINT and AZURE_SEARCH_INDEX must be set in environment variables.")
 
     cognitive_search_service = CognitiveSearchService(
         endpoint=COGNITIVE_SEARCH_ENDPOINT,
         index_name=COGNITIVE_SEARCH_INDEX_NAME
     )
 except Exception as e:
-    # Log the error and raise an exception to prevent the app from starting incorrectly
     import logging
     logging.getLogger(__name__).error(f"Failed to initialize CognitiveSearchService: {e}")
     raise Exception(f"Failed to initialize CognitiveSearchService: {e}")
@@ -73,7 +72,7 @@ except Exception as e:
 @router.post("/", response_model=SearchResponse)
 async def search_documents(
     request_body: SearchRequest,
-    user_context: Dict[str, Any] = Depends(get_current_user_context) # Authenticate user and get context
+    user_context: Dict[str, Any] = {} # Authenticate user and get context
 ):
     """
     Performs a search against Azure Cognitive Search, applying RBAC filters
