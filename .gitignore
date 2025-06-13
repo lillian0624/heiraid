@@ -136,3 +136,6 @@ dist
 .pnp.*
 venv
 .venv
+
+release.zip
+*.zip
