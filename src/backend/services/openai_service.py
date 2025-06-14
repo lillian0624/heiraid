@@ -14,7 +14,7 @@ class OpenAIService:
         print("DEBUG: deployment_name =", deployment_name)
         self.client = OpenAI(
             api_key=openai_api_key,
-            base_url=openai_endpoint  # Just the endpoint, no /openai/deployments/...
+            base_url=openai_endpoint
         )
         self.deployment_name = deployment_name
         logger.info(f"Initialized Azure OpenAI client for deployment: {deployment_name}")

@@ -5,21 +5,23 @@ load_dotenv()
 import os
 import logging
 from azure.search.documents import SearchClient
+from azure.core.credentials import AzureKeyCredential
 
 logger = logging.getLogger(__name__)
 
 class CognitiveSearchService:
     def __init__(self, endpoint=None, index_name=None, credential=None):
+        # Use provided values or fall back to environment variables
         self.endpoint = endpoint or os.getenv("AZURE_SEARCH_ENDPOINT")
         self.index_name = index_name or os.getenv("AZURE_SEARCH_INDEX")
         self.credential = credential or os.getenv("AZURE_SEARCH_KEY")
-        print("DEBUG: endpoint =", self.endpoint)
+        logger.debug(f"Initializing SearchClient with endpoint: {self.endpoint}, index: {self.index_name}")
+
         self.search_client = SearchClient(
             endpoint=self.endpoint,
             index_name=self.index_name,
-            credential=self.credential
+            credential=AzureKeyCredential(self.credential)
         )
-        logger.info(f"Initialized Cognitive Search client for index: {index_name}")
 
     def build_rbac_filter(self, user_context: dict) -> str:
         """
@@ -66,27 +68,32 @@ class CognitiveSearchService:
 
         return " and ".join(filters)
 
-    def search_documents(self, query: str, user_context: dict, top: int = 10):
+    def search_documents(self, query, top=5, user_context=None):
         """
-        Searches documents in Cognitive Search with RBAC filtering.
+        Search documents in Azure Cognitive Search index.
+        :param query: The search query string.
+        :param top: Number of top results to return.
+        :param user_context: Optional user context for RBAC or filtering.
+        :return: List of documents matching the query.
         """
-        filter_query = self.build_rbac_filter(user_context)
-
-        # If using vector search (RAG)
-        # You'd generate embeddings for the query here
-        # query_vector = generate_embedding(query) # Hypothetical function
-
         try:
-            results = self.search_client.search(
+            search_results = self.search_client.search(
                 search_text=query,
-                filter=filter_query,
                 top=top,
-                # vector=query_vector, # Uncomment for vector search
-                # query_type="semantic", # Or "full", depending on your query strategy
-                # semantic_configuration_name="my-semantic-config", # If using semantic search
-                select=["id", "filename", "summary", "filepath", "document_type", "legal_category"] # Fields to return
+                select=["id", "title", "section", "source", "content"]
             )
-            return [doc for doc in results]
+            docs = []
+            for result in search_results:
+                doc = {
+                    "id": result.get("id"),
+                    "title": result.get("title"),
+                    "section": result.get("section"),
+                    "source": result.get("source"),
+                    "content": result.get("content"),
+                }
+                docs.append(doc)
+            return docs
         except Exception as e:
-            logger.error(f"Error searching Cognitive Search: {e}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Search failed")
+            import logging
+            logging.getLogger(__name__).error(f"Error searching documents: {e}", exc_info=True)
+            return []

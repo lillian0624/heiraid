@@ -9,10 +9,18 @@ export async function POST(req: NextRequest) {
   try {
     const { query } = await req.json();
 
-    // 1. Query Azure Cognitive Search
+    // Make sure query is a string
+    if (typeof query !== "string" || !query.trim()) {
+      return NextResponse.json({ error: "Query must be a non-empty string." }, { status: 400 });
+    }
+
+    // Azure Cognitive Search expects { search: "..." }
     const searchRes = await axios.post(
-      `${endpoint}/indexes/${indexName}/docs/search?api-version=2023-07-01`,
-      { search: query, top: 3 },
+      `${endpoint}/indexes/${indexName}/docs/search?api-version=2023-11-01`,
+      {
+        search: query, // must be a string
+        top: 3
+      },
       {
         headers: {
           "Content-Type": "application/json",
@@ -21,35 +29,9 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    const docs = searchRes.data.value.map((doc: any) => doc.content).join("\n---\n");
-
-    // 2. Pass to GPT (OpenAI API)
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4",
-        messages: [
-          { role: "system", content: "You are a legal assistant helping users resolve property issues." },
-          { role: "user", content: `${query}\n\nContext:\n${docs}` }
-        ]
-      })
-    });
-
-    const gptResult = await response.json();
-
-    return NextResponse.json({
-      answer: gptResult.choices[0].message.content,
-      sources: searchRes.data.value,
-    });
+    return NextResponse.json({ results: searchRes.data.value });
   } catch (error: any) {
-    // Always return JSON on error
-    return NextResponse.json(
-      { error: error.message || "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("Azure Search error:", error.response?.data || error.message);
+    return NextResponse.json({ error: error.response?.data?.error?.message || "Internal Server Error" }, { status: 500 });
   }
 }

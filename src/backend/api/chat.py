@@ -7,20 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-from azure.search.documents import SearchClient
 
-class CognitiveSearchService:
-    def __init__(self, endpoint=None, index_name=None, credential=None):
-        # Use provided values or fall back to environment variables
-        self.endpoint = endpoint or os.getenv("AZURE_SEARCH_ENDPOINT")
-        self.index_name = index_name or os.getenv("AZURE_SEARCH_INDEX")
-        self.credential = credential or os.getenv("AZURE_SEARCH_KEY")
-        print("DEBUG: endpoint =", self.endpoint)
-        self.search_client = SearchClient(
-            endpoint=self.endpoint,
-            index_name=self.index_name,
-            credential=self.credential
-        )
+
 
 router = APIRouter()
 

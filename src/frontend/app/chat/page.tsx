@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Configuration, OpenAIApi } from "openai";  
+
 
 export default function ChatPage() {
   const [question, setQuestion] = useState("");
