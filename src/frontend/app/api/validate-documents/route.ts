@@ -8,16 +8,16 @@ const indexName = "heiraid-index"; // Update if your index name differs
 export async function POST(req: NextRequest) {
     const { query } = await req.json();
 
-    // Search in title, section, or source fields
+    // Only include searchable fields
     const searchBody = {
         search: query,
-        searchFields: "title,section,source",
+        searchFields: "title,section", // Removed 'source'
         top: 5
     };
 
     try {
         const searchRes = await axios.post(
-            `${endpoint}/indexes/${indexName}/docs/search?api-version=2023-07-01`,
+            `${endpoint}/indexes/${indexName}/docs/search?api-version=2023-11-01`,
             searchBody,
             {
                 headers: {

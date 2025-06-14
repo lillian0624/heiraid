@@ -18,7 +18,8 @@ export async function POST(req: NextRequest) {
     const searchRes = await axios.post(
       `${endpoint}/indexes/${indexName}/docs/search?api-version=2023-11-01`,
       {
-        search: query, // must be a string
+        
+        searchFields: "title,section",
         top: 3
       },
       {
