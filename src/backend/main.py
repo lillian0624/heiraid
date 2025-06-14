@@ -21,13 +21,13 @@ app = FastAPI(
 # Configure CORS (adjust for production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # For production, specify allowed origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount static files
+# Mount static files if needed
 # app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
@@ -40,4 +40,4 @@ app.include_router(search.router, prefix="/search", tags=["Cognitive Search"])
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
