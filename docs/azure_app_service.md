@@ -28,7 +28,18 @@ To deploy to Azure App Service, please follow the following steps:
     azd env set DEPLOYMENT_TARGET appservice
     ```
 
-5. (Optional) This is the point where you can customize the deployment by setting other `azd` environment variables, in order to [use existing resources](deploy_existing.md), [enable optional features (such as auth or vision)](deploy_features.md), or [deploy to free tiers](deploy_lowcost.md).
+5. (Optional) This is the point where you can customize the deployment by setting environment variables, in order to [use existing resources](docs/deploy_existing.md), [enable optional features (such as auth or vision)](docs/deploy_features.md), or [deploy low-cost options](docs/deploy_lowcost.md), or [deploy with the Azure free trial](docs/deploy_freetrial.md).
+    - [Enabling authentication](docs/login_and_acl.md)
+    - [Enabling login and document level access control](docs/login_and_acl.md)
+    - [Enabling user document upload](docs/deploy_features.md#enabling-user-document-upload)
+    - [Enabling client-side chat history](docs/deploy_features.md#enabling-client-side-chat-history) or [Enabling persistent chat history with Azure Cosmos DB](docs/deploy_features.md#enabling-persistent-chat-history-with-azure-cosmos-db)
+    - [Enabling language picker](docs/deploy_features.md#enabling-language-picker)
+    - [Enabling speech input/output](docs/deploy_features.md#enabling-speech-inputoutput)
+    - Optional! [Using different chat completion models (Default is gpt-4.1)](docs/deploy_features.md#changing-chat-completion-model)
+    - Optional! [Using different embedding models (Default is `text-embedding-3-large`)](docs/deploy_features.md#changing-embedding-model)
+    - Optional! [Enabling Integrated Vectorization](docs/data_ingestion.md#overview-of-integrated-vectorization)
+    - Optional! [Enabling query rewriting](deploy_features.md#enabling-query-rewriting)
+    - Optional! [Using local parsers](docs/data_ingestion.md#using-local-parsers-for-document-extraction)
 6. Provision the resources and deploy the code:
 
     ```bash

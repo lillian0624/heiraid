@@ -28,12 +28,6 @@ The [azure-search-openai-demo](/) project can set up a full RAG chat app on Azur
 - [Requirements](#requirements)
 - [Setting up Microsoft Entra applications](#setting-up-microsoft-entra-applications)
   - [Automatic Setup](#automatic-setup)
-  - [Manual Setup](#manual-setup)
-    - [Server App](#server-app)
-    - [Client App](#client-app)
-    - [Configure Server App Known Client Applications](#configure-server-app-known-client-applications)
-    - [Testing](#testing)
-    - [Programmatic Access With Authentication](#programmatic-access-with-authentication)
   - [Troubleshooting](#troubleshooting)
 - [Adding data with document level access control](#adding-data-with-document-level-access-control)
   - [Using the Add Documents API](#using-the-add-documents-api)
@@ -78,21 +72,21 @@ The easiest way to setup the two apps is to use the `azd` CLI. We've written scr
       python ./scripts/manageacl.py --acl-action enable_acls
       ```
 
-1. (Optional) **Enforce access control**
+1. **Enforce access control**
   To ensure that the app restricts search results to only documents that the user has access to, run the following command:
 
     ```shell
     azd env set AZURE_ENFORCE_ACCESS_CONTROL true
     ```
 
-1. (Optional) **Allow global document access**
+1. **Allow global document access**
   To allow users to search on documents that have no access controls assigned, even when access control is required, run the following command:
 
     ```shell
     azd env set AZURE_ENABLE_GLOBAL_DOCUMENT_ACCESS true
     ```
 
-1. (Optional) **Allow unauthenticated access**
+1. **Allow unauthenticated access**
   To allow unauthenticated users to use the app, even when access control is enforced, run the following command:
 
     ```shell
@@ -101,7 +95,7 @@ The easiest way to setup the two apps is to use the `azd` CLI. We've written scr
 
     Note: These users will not be able to search on documents that have access control assigned, so `AZURE_ENABLE_GLOBAL_DOCUMENT_ACCESS` should also be set to true to give them access to the remaining documents.
 
-1. **Set the authentication tenant ID**
+1. **Set the authentication tenant ID** Go to Azure portal Microsoft Entra ID: Overview
   Specify the tenant ID associated with authentication by running:
 
     ```shell
@@ -122,117 +116,6 @@ The easiest way to setup the two apps is to use the `azd` CLI. We've written scr
     azd up
     ```
 
-### Manual Setup
-
-The following instructions explain how to setup the two apps using the Azure Portal.
-
-#### Server App
-
-- Sign in to the [Azure portal](https://portal.azure.com/).
-- Select the Microsoft Entra ID service.
-- In the left hand menu, select **Application Registrations**.
-- Select **New Registration**.
-  - In the **Name** section, enter a meaningful application name. This name will be displayed to users of the app, for example `Azure Search OpenAI Chat API`.
-  - Under **Supported account types**, select **Accounts in this organizational directory only**.
-- Select **Register** to create the application
-- In the app's registration screen, find the **Application (client) ID**.
-  - Run the following `azd` command to save this ID: `azd env set AZURE_SERVER_APP_ID <Application (client) ID>`.
-
-- Microsoft Entra supports three types of credentials to authenticate an app using the [client credentials](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-client-creds-grant-flow): passwords (app secrets), certificates, and federated identity credentials. For a higher level of security, either [certificates](https://learn.microsoft.com/entra/identity-platform/howto-create-self-signed-certificate) or federated identity credentials are recommended. This sample currently uses an app secret for ease of provisioning.
-
-- Select **Certificates & secrets** in the left hand menu.
-- In the **Client secrets** section, select **New client secret**.
-  - Type a description, for example `Azure Search OpenAI Chat Key`.
-  - Select one of the available key durations.
-  - The generated key value will be displayed after you select **Add**.
-  - Copy the generated key value and run the following `azd` command to save this ID: `azd env set AZURE_SERVER_APP_SECRET <generated key value>`.
-- Select **API Permissions** in the left hand menu. By default, the [delegated `User.Read`](https://learn.microsoft.com/graph/permissions-reference#user-permissions) permission should be present. This permission is required to read the signed-in user's profile to get the security information used for document level access control. If this permission is not present, it needs to be added to the application.
-  - Select **Add a permission**, and then **Microsoft Graph**.
-  - Select **Delegated permissions**.
-  - Search for and and select `User.Read`.
-  - Select **Add permissions**.
-- Select **Expose an API** in the left hand menu. The server app works by using the [On Behalf Of Flow](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow#protocol-diagram), which requires the server app to expose at least 1 API.
-  - The application must define a URI to expose APIs. Select **Add** next to **Application ID URI**.
-    - By default, the Application ID URI is set to `api://<application client id>`. Accept the default by selecting **Save**.
-  - Under **Scopes defined by this API**, select **Add a scope**.
-  - Fill in the values as indicated:
-    - For **Scope name**, use **access_as_user**.
-    - For **Who can consent?**, select **Admins and users**.
-    - For **Admin consent display name**, type **Access Azure Search OpenAI Chat API**.
-    - For **Admin consent description**, type **Allows the app to access Azure Search OpenAI Chat API as the signed-in user.**.
-    - For **User consent display name**, type **Access Azure Search OpenAI Chat API**.
-    - For **User consent description**, type **Allow the app to access Azure Search OpenAI Chat API on your behalf**.
-    - Leave **State** set to **Enabled**.
-    - Select **Add scope** at the bottom to save the scope.
-- (Optional) Enable group claims. Include which Microsoft Entra groups the user is part of as part of the login in the [optional claims](https://learn.microsoft.com/entra/identity-platform/optional-claims). The groups are used for [optional security filtering](https://learn.microsoft.com/azure/search/search-security-trimming-for-azure-search) in the search results.
-  - In the left hand menu, select **Token configuration**
-  - Under **Optional claims**, select **Add groups claim**
-  - Select which [group types](https://learn.microsoft.com/entra/identity/hybrid/connect/how-to-connect-fed-group-claims) to include in the claim. Note that a [overage claim](https://learn.microsoft.com/entra/identity-platform/access-token-claims-reference#groups-overage-claim) will be emitted if the user is part of too many groups. In this case, the API server will use the [Microsoft Graph](https://learn.microsoft.com/graph/api/user-list-memberof?view=graph-rest-*0&tabs=http) to list the groups the user is part of instead of relying on the groups in the claim.
-  - Select **Add** to save your changes
-
-#### Client App
-
-- Sign in to the [Azure portal](https://portal.azure.com/).
-- Select the Microsoft Entra ID service.
-- In the left hand menu, select **Application Registrations**.
-- Select **New Registration**.
-  - In the **Name** section, enter a meaningful application name. This name will be displayed to users of the app, for example `Azure Search OpenAI Chat Web App`.
-  - Under **Supported account types**, select **Accounts in this organizational directory only**.
-  - Under `Redirect URI (optional)` section, select `Single-page application (SPA)` in the combo-box and enter the following redirect URI:
-    - If you are running the sample locally, add the endpoints `http://localhost:50505/redirect` and `http://localhost:5173/redirect`
-    - If you are running the sample on Azure, add the endpoints provided by `azd up`: `https://<your-endpoint>.azurewebsites.net/redirect`.
-    - If you are running the sample from Github Codespaces, add the Codespaces endpoint: `https://<your-codespace>-50505.app.github.dev/redirect`
-- Select **Register** to create the application
-- In the app's registration screen, find the **Application (client) ID**.
-  - Run the following `azd` command to save this ID: `azd env set AZURE_CLIENT_APP_ID <Application (client) ID>`.
-- In the left hand menu, select **Authentication**.
-  - Under Web, add a redirect URI with the endpoint provided by `azd up`: `https://<your-endpoint>.azurewebsites.net/.auth/login/aad/callback`.
-  - Under **Implicit grant and hybrid flows**, select **ID Tokens (used for implicit and hybrid flows)**
-  - Select **Save**
-- In the left hand menu, select **API permissions**. You will add permission to access the **access_as_user** API on the server app. This permission is required for the [On Behalf Of Flow](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow#protocol-diagram) to work.
-  - Select **Add a permission**, and then **My APIs**.
-  - In the list of applications, select your server application **Azure Search OpenAI Chat API**
-  - Ensure **Delegated permissions** is selected.
-  - In the **Select permissions** section, select the **access_as_user** permission
-  - Select **Add permissions**.
-- Stay in the **API permissions** section and select **Add a permission**.
-  - Select **Microsoft Graph**.
-  - Select **Delegated permissions**.
-  - Search for and select `User.Read`.
-  - Select **Add permissions**.
-
-#### Configure Server App Known Client Applications
-
-Consent from the user must be obtained for use of the client and server app. The client app can prompt the user for consent through a dialog when they log in. The server app has no ability to show a dialog for consent. Client apps can be [added to the list of known clients](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow#gaining-consent-for-the-middle-tier-application) to access the server app, so a consent dialog is shown for the server app.
-
-- Navigate to the server app registration
-- In the left hand menu, select **Manifest**
-- Replace `"knownClientApplications": []` with `"knownClientApplications": ["<client application id>"]`
-- Select **Save**
-
-#### Testing
-
-If you are running setup for the first time, ensure you have run `azd env set AZURE_ADLS_GEN2_STORAGE_ACCOUNT <YOUR-STORAGE_ACCOUNT>` before running `azd up`. If you do not set this environment variable, your index will not be initialized with access control support when `prepdocs` is run for the first time. To manually enable access control in your index, use the [manual setup script](#azure-data-lake-storage-gen2-setup).
-
-Ensure you run `azd env set AZURE_USE_AUTHENTICATION` to enable the login UI once you have setup the two Microsoft Entra apps before you deploy or run the application. The login UI will not appear unless all [required environment variables](#environment-variables-reference) have been setup.
-
-In both the chat and ask a question modes, under **Developer settings** optional **Use oid security filter** and **Use groups security filter** checkboxes will appear. The oid (User ID) filter maps to the `oids` field in the search index and the groups (Group ID) filter maps to the `groups` field in the search index. If `AZURE_ENFORCE_ACCESS_CONTROL` has been set, then both the **Use oid security filter** and **Use groups security filter** options are always enabled and cannot be disabled.
-
-#### Programmatic Access with Authentication
-
-If you want to use the chat endpoint without the UI and still use authentication, you must disable [App Service built-in authentication](https://learn.microsoft.com/azure/app-service/overview-authentication-authorization) and use only the app's MSAL-based authentication flow. Ensure the `AZURE_DISABLE_APP_SERVICES_AUTHENTICATION` environment variable is set before deploying.
-
-Get an access token that can be used for calling the chat API using the following code:
-
-```python
-from azure.identity import DefaultAzureCredential
-import os
-
-token = DefaultAzureCredential().get_token(f"api://{os.environ['AZURE_SERVER_APP_ID']}/access_as_user", tenant_id=os.getenv('AZURE_AUTH_TENANT_ID', os.getenv('AZURE_TENANT_ID')))
-
-print(token.token)
-```
-
 ### Troubleshooting
 
 - If your primary tenant restricts the ability to create Entra applications, you'll need to use a separate tenant to create the Entra applications. You can create a new tenant by following [these instructions](https://learn.microsoft.com/entra/identity-platform/quickstart-create-new-tenant). Then run `azd env set AZURE_AUTH_TENANT_ID <YOUR-AUTH-TENANT-ID>` before running `azd up`.
@@ -243,61 +126,9 @@ print(token.token)
 
 ## Adding data with document level access control
 
-The sample supports 2 main strategies for adding data with document level access control.
+The sample supports strategy for adding data with document level access control.
 
-- [Using the Add Documents API](#using-the-add-documents-api). Sample scripts are provided which use the Azure AI Search Service Add Documents API to directly manage access control information on _existing documents_ in the index.
 - [Using prepdocs and Azure Data Lake Storage Gen 2](#azure-data-lake-storage-gen2-setup). Sample scripts are provided which set up an [Azure Data Lake Storage Gen 2](https://learn.microsoft.com/azure/storage/blobs/data-lake-storage-introduction) account, set the [access control information](https://learn.microsoft.com/azure/storage/blobs/data-lake-storage-access-control) on files and folders stored there, and ingest those documents into the search index with their  access control information.
-
-### Using the Add Documents API
-
-Manually enable document level access control on a search index and manually set access control values using the [manageacl.py](/scripts/manageacl.py) script.
-
-Prior to running the script:
-
-- Run `azd up` or use `azd env set` to manually set the `AZURE_SEARCH_SERVICE` and `AZURE_SEARCH_INDEX` azd environment variables
-- Activate the Python virtual environment for your shell session
-
-The script supports the following commands. All commands support `-v` for verbose logging.
-
-- `python ./scripts/manageacl.py --acl-action enable_acls`: Creates the required `oids` (User ID) and `groups` (Group IDs) [security filter](https://learn.microsoft.com/azure/search/search-security-trimming-for-azure-search) fields for document level access control on your index, as well as the `storageUrl` field for storing the Blob storage URL. Does nothing if these fields already exist.
-
-  Example usage:
-
-  ```shell
-  python ./scripts/manageacl.py -v --acl-action enable_acls
-  ```
-
-- `python ./scripts/manageacl.py --acl-type [oids or groups]--acl-action view --url [https://url.pdf]`: Prints access control values associated with either User IDs or Group IDs for the document at the specified URL.
-
-  Example to view all Group IDs:
-
-  ```shell
-  python ./scripts/manageacl.py -v --acl-type groups --acl-action view --url https://st12345.blob.core.windows.net/content/Benefit_Options.pdf
-  ```
-
-- `python ./scripts/manageacl.py --acl-type [oids or groups] --acl-action add --acl [ID of group or user] --url [https://url.pdf]`: Adds an access control value associated with either User IDs or Group IDs for the document at the specified URL.
-
-  Example to add a Group ID:
-
-  ```shell
-  python ./scripts/manageacl.py -v --acl-type groups --acl-action add --acl xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx --url https://st12345.blob.core.windows.net/content/Benefit_Options.pdf
-  ```
-
-- `python ./scripts/manageacl.py --acl-type [oids or groups]--acl-action remove_all --url [https://url.pdf]`: Removes all access control values associated with either User IDs or Group IDs for a specific document.
-
-  Example to remove all Group IDs:
-
-  ```shell
-  python ./scripts/manageacl.py -v --acl-type groups --acl-action remove_all --url https://st12345.blob.core.windows.net/content/Benefit_Options.pdf
-  ```
-
-- `python ./scripts/manageacl.py --url [https://url.pdf] --acl-type [oids or groups]--acl-action remove --acl [ID of group or user]`: Removes an access control value associated with either User IDs or Group IDs for a specific document.
-
-  Example to remove a specific User ID:
-
-  ```shell
-  python ./scripts/manageacl.py -v --acl-type oids --acl-action remove --acl xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx --url https://st12345.blob.core.windows.net/content/Benefit_Options.pdf
-  ```
 
 ### Azure Data Lake Storage Gen2 Setup
 

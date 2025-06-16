@@ -94,15 +94,14 @@ The steps below will provision Azure resources and deploy the application code t
     - [Enabling authentication](docs/login_and_acl.md)
     - [Enabling login and document level access control](docs/login_and_acl.md)
     - [Enabling user document upload](docs/deploy_features.md#enabling-user-document-upload)
-    - [Enabling client-side chat history](docs/deploy_features.md#enabling-client-side-chat-history)
-    - [Enabling persistent chat history with Azure Cosmos DB](docs/deploy_features.md#enabling-persistent-chat-history-with-azure-cosmos-db)
+    - [Enabling client-side chat history](docs/deploy_features.md#enabling-client-side-chat-history) or [Enabling persistent chat history with Azure Cosmos DB](docs/deploy_features.md#enabling-persistent-chat-history-with-azure-cosmos-db)
     - [Enabling language picker](docs/deploy_features.md#enabling-language-picker)
     - [Enabling speech input/output](docs/deploy_features.md#enabling-speech-inputoutput)
-    - [Using different chat completion models (Default is gpt-4.1)](docs/deploy_features.md#changing-chat-completion-model)
-    - [Using different embedding models (Default is `text-embedding-3-large`)](docs/deploy_features.md#changing-embedding-model)
-    - [Enabling Integrated Vectorization](docs/data_ingestion.md#overview-of-integrated-vectorization)
-    - [Enabling query rewriting](deploy_features.md#enabling-query-rewriting)
-    - [Using local parsers](docs/data_ingestion.md#using-local-parsers-for-document-extraction)
+    - Optional! [Using different chat completion models (Default is gpt-4.1)](docs/deploy_features.md#changing-chat-completion-model)
+    - Optional! [Using different embedding models (Default is `text-embedding-3-large`)](docs/deploy_features.md#changing-embedding-model)
+    - Optional! [Enabling Integrated Vectorization](docs/data_ingestion.md#overview-of-integrated-vectorization)
+    - Optional! [Enabling query rewriting](deploy_features.md#enabling-query-rewriting)
+    - Optional! [Using local parsers](docs/data_ingestion.md#using-local-parsers-for-document-extraction)
 
 4. Run `azd up` - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
     - **Important**: Beware that the resources created by this command will incur immediate costs, primarily from the AI Search resource. These resources may accrue costs even if you interrupt the command before it is fully executed. You can run `azd down` or delete the resources manually to avoid unnecessary spending.
