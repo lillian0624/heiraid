@@ -101,7 +101,7 @@ The steps below will provision Azure resources and deploy the application code t
     - [Using different chat completion models (Default is gpt-4.1)](docs/deploy_features.md#changing-chat-completion-model)
     - [Using different embedding models (Default is `text-embedding-3-large`)](docs/deploy_features.md#changing-embedding-model)
     - [Enabling Integrated Vectorization](docs/data_ingestion.md#overview-of-integrated-vectorization)
-    - [Enabling query rewriting](docs/query_rewriting.md)
+    - [Enabling query rewriting](deploy_features.md#enabling-query-rewriting)
     - [Using local parsers](docs/data_ingestion.md#using-local-parsers-for-document-extraction)
 
 4. Run `azd up` - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
