@@ -1,5 +1,7 @@
 # src/backend/api/search.py
+import logging
 
+logger = logging.getLogger(__name__)
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional

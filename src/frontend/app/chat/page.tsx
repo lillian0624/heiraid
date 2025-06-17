@@ -32,7 +32,7 @@ export default function ChatPage() {
       setLoading(false);
     } else {
       const data = await res.json();
-      setResponse(data.answer);
+      setResponse(data.answer || data.choices?.[0]?.message?.content || "");
       setSources(data.sources);
       setLoading(false);
     }

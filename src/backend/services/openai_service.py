@@ -1,20 +1,22 @@
 # src/backend/services/openai_service.py
 import os
 import logging
-from openai import OpenAI
+from openai import AzureOpenAI
 from typing import List, Dict
 from fastapi import HTTPException, status
 
 logger = logging.getLogger(__name__)
 
 class OpenAIService:
-    def __init__(self, openai_endpoint: str, openai_api_key: str, deployment_name: str):
+    def __init__(self, openai_endpoint: str, openai_api_key: str, deployment_name: str, api_version: str = "2024-02-15-preview"):
         print("DEBUG: openai_endpoint =", openai_endpoint)
         print("DEBUG: openai_api_key =", openai_api_key)
         print("DEBUG: deployment_name =", deployment_name)
-        self.client = OpenAI(
+        print("DEBUG: api_version =", api_version)
+        self.client = AzureOpenAI(
             api_key=openai_api_key,
-            base_url=openai_endpoint
+            azure_endpoint=openai_endpoint,
+            api_version="2024-12-01-preview"
         )
         self.deployment_name = deployment_name
         logger.info(f"Initialized Azure OpenAI client for deployment: {deployment_name}")

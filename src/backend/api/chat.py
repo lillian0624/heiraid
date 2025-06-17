@@ -1,4 +1,5 @@
-# src/backend/api/chat.py
+import openai
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 from ..services.cognitive_search_service import CognitiveSearchService

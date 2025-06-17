@@ -1,8 +1,11 @@
+import openai
+from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables at the very top
 
 import os
-from fastapi import FastAPI
+print(os.environ)
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -41,3 +44,26 @@ app.include_router(search.router, prefix="/search", tags=["Cognitive Search"])
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
+
+@app.post("/chat/completions")
+async def chat_completions(request: Request):
+    body = await request.json()
+    print("Request body:", body)  # Debug: print the request body
+
+    # Extract messages from the request body
+    messages = body.get("messages")
+    print("Messages:", messages)  # Debug: print the messages
+
+    # Call the OpenAI API
+    response = openai.ChatCompletion.create(
+        model="o4-mini",
+        messages=messages,
+        api_key=os.getenv("OPENAI_API_KEY")
+    )
+
+    # Debug: print the entire response from OpenAI
+    print("Response:", response)
+
+    # Extract and return the assistant's reply
+    print(response.choices[0].message.content)
+    return {"answer": response.choices[0].message.content}
