@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 import os
 
 from app import create_app
@@ -9,4 +11,10 @@ RUNNING_ON_AZURE = os.getenv("WEBSITE_HOSTNAME") is not None or os.getenv("RUNNI
 if not RUNNING_ON_AZURE:
     load_azd_env()
 
+ # ...existing code...
 app = create_app()
+
+if __name__ == "__main__":
+    app.run(port=50505)   
+
+
